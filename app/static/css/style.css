@@ -1,0 +1,29 @@
+/* Estilos mínimos complementares ao Bootstrap 5. */
+
+:root {
+  --mv-table-head: #f1f3f5;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.table thead th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+.table td {
+  font-size: 0.9rem;
+}
+
+.navbar-brand {
+  letter-spacing: 0.02em;
+}
+
+pre code {
+  white-space: pre;
+}

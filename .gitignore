@@ -1,0 +1,25 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Ambientes (gerenciados via pyenv, nunca locais)
+venv/
+.venv/
+env/
+
+# Banco de dados e configurações locais
+instance/
+*.db
+*.sqlite3
+
+# Variáveis de ambiente
+.env
+
+# Editores / SO
+.idea/
+.vscode/
+.DS_Store
+
+# Fast Debug
+.run

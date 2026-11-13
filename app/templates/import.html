@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Importar arquivos · Money View{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h4 mb-1">Importar arquivos CSV</h1>
+    <p class="text-secondary small mb-0">
+      Envie um ou vários arquivos de uma vez. Linhas idênticas já importadas são ignoradas automaticamente.
+    </p>
+  </div>
+  <a class="btn btn-outline-dark" href="{{ url_for('main.index') }}">
+    <i class="bi bi-list-ul me-1"></i>Ver despesas
+  </a>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-xl-7">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <form method="post" action="{{ url_for('imports.import_files') }}" enctype="multipart/form-data">
+          <label for="arquivos" class="form-label fw-semibold">Arquivos CSV</label>
+          <input class="form-control" type="file" id="arquivos" name="arquivos" accept=".csv,text/csv" multiple required>
+          <div class="form-text">
+            Separador <code>;</code> · colunas
+            <code>DATA;DESCRICAO;VALOR;TIPO;LOCAL;BANCO;CARTAO</code> · aceita UTF-8 e Windows-1252.
+          </div>
+          <ul id="file-list" class="list-unstyled small text-secondary mt-2 mb-3"></ul>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-upload me-1"></i>Importar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-xl-5">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h6 text-uppercase text-secondary">Formato esperado</h2>
+        <pre class="small bg-body-tertiary rounded p-3 mb-3 overflow-auto"><code>DATA;DESCRICAO;VALOR;TIPO;LOCAL;BANCO;CARTAO
+05/03/2025;SUPERMERCADO CENTRAL;152,90;ALIMENTACAO;SAO PAULO;ITAU;**** 1234
+06/03/2025;UBER TRIP;28,45;TRANSPORTE;SAO PAULO;NUBANK;**** 5678
+07/03/2025;DROGARIA SAO PAULO;1.234,56;SAUDE;RIO DE JANEIRO;ITAU;**** 1234</code></pre>
+        <ul class="small text-secondary mb-0 ps-3">
+          <li><strong>DATA</strong>: <code>dd/mm/aaaa</code> (também aceita <code>aaaa-mm-dd</code>).</li>
+          <li><strong>DESCRICAO</strong>: texto do lançamento (2ª coluna).</li>
+          <li><strong>VALOR</strong>: <code>1.234,56</code> ou <code>1234.56</code>.</li>
+          <li><strong>TIPO</strong>: texto livre que classifica a despesa
+            (<code>ALIMENTACAO</code>, <code>TRANSPORTE</code>…) e alimenta o filtro.</li>
+          <li><strong>CARTAO</strong> preenchido indica origem “Cartão”; vazio indica “Banco”.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm mt-3">
+  <div class="card-header bg-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <span class="fw-semibold">Histórico de importações</span>
+    <span class="small text-secondary">
+      {{ batches|length }} importação(ões) · {{ movements_total }} lançamento(s) na base
+    </span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th scope="col">Arquivo</th>
+          <th scope="col" class="text-nowrap">Importado em</th>
+          <th scope="col" class="text-end">Linhas</th>
+          <th scope="col" class="text-end">Importadas</th>
+          <th scope="col" class="text-end">Duplicadas</th>
+          <th scope="col" class="text-end">Inválidas</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="text-end">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for batch in batches %}
+          <tr>
+            <td class="text-break">
+              {{ batch.filename }}
+              {% if batch.error_message %}
+                <div class="small text-danger">{{ batch.error_message }}</div>
+              {% endif %}
+              {% if batch.warnings %}
+                <div class="small text-warning-emphasis">{{ batch.warnings }}</div>
+              {% endif %}
+            </td>
+            <td class="text-nowrap">{{ batch.imported_at.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td class="text-end">{{ batch.total_rows }}</td>
+            <td class="text-end fw-semibold">{{ batch.imported_rows }}</td>
+            <td class="text-end">{{ batch.duplicated_rows }}</td>
+            <td class="text-end">{{ batch.invalid_rows }}</td>
+            <td><span class="badge text-bg-{{ batch.status_class }}">{{ batch.status }}</span></td>
+            <td class="text-end">
+              <form method="post" action="{{ url_for('imports.delete_batch', batch_id=batch.id) }}"
+                    onsubmit='return confirm({{ ("Excluir a importação de " ~ batch.filename ~ " e suas despesas?")|tojson }});'>
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-trash"></i><span class="d-none d-md-inline ms-1">Excluir</span>
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="8" class="text-center text-secondary py-4">
+              Nenhum arquivo importado até o momento.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/import.js') }}"></script>
+{% endblock %}

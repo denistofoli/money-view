@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}Despesas · Money View{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h4 mb-1">Despesas</h1>
+    <p class="text-secondary small mb-0">
+      {% if start_date or end_date %}
+        Período:
+        {% if start_date %}{{ start_date|date_br }}{% else %}início{% endif %}
+        até
+        {% if end_date %}{{ end_date|date_br }}{% else %}hoje{% endif %}
+      {% else %}
+        Todo o período importado
+      {% endif %}
+      {% if has_filters %}· <span class="badge text-bg-secondary">{{ filter_args|length }} filtro(s) ativo(s)</span>{% endif %}
+    </p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('imports.import_files') }}">
+    <i class="bi bi-upload me-1"></i>Importar arquivos
+  </a>
+</div>
+
+{# Totais sempre visíveis, calculados sobre todo o resultado filtrado #}
+<div class="row g-3 mb-3">
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100 text-bg-primary">
+      <div class="card-body">
+        <div class="text-uppercase small opacity-75">Total das despesas filtradas</div>
+        <div class="fs-3 fw-semibold">R$ {{ total|brl }}</div>
+        <div class="small opacity-75">{{ count }} lançamento(s) no filtro atual</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-uppercase small text-secondary">Lançamentos</div>
+        <div class="fs-3 fw-semibold">{{ count }}</div>
+        <div class="small text-secondary">registros no filtro atual</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-uppercase small text-secondary">Ticket médio</div>
+        <div class="fs-3 fw-semibold">R$ {{ average|brl }}</div>
+        <div class="small text-secondary">média por lançamento</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-uppercase small text-secondary">Maior despesa</div>
+        <div class="fs-3 fw-semibold text-danger">R$ {{ biggest|brl }}</div>
+        <div class="small text-secondary">maior valor no filtro</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <form method="get" action="{{ url_for('main.index') }}" class="row g-3 align-items-end">
+      <div class="col-6 col-md-3 col-xl-2">
+        <label for="data_inicio" class="form-label small text-secondary mb-1">Data inicial</label>
+        <input type="date" class="form-control" id="data_inicio" name="data_inicio"
+               value="{{ filters.data_inicio }}">
+      </div>
+      <div class="col-6 col-md-3 col-xl-2">
+        <label for="data_fim" class="form-label small text-secondary mb-1">Data final</label>
+        <input type="date" class="form-control" id="data_fim" name="data_fim"
+               value="{{ filters.data_fim }}">
+      </div>
+      <div class="col-12 col-md-6 col-xl-3">
+        <label for="tipo" class="form-label small text-secondary mb-1">Tipo de despesa</label>
+        <select class="form-select" id="tipo" name="tipo">
+          <option value="">Todos os tipos</option>
+          {% for item in expense_types %}
+            <option value="{{ item }}" {% if filters.tipo == item %}selected{% endif %}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-3 col-xl-2">
+        <label for="fonte" class="form-label small text-secondary mb-1">Origem</label>
+        <select class="form-select" id="fonte" name="fonte">
+          {% for value, label in source_options.items() %}
+            <option value="{{ value }}" {% if filters.fonte == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-3 col-xl-3">
+        <label for="banco" class="form-label small text-secondary mb-1">Banco</label>
+        <select class="form-select" id="banco" name="banco">
+          <option value="">Todos os bancos</option>
+          {% for item in banks %}
+            <option value="{{ item }}" {% if filters.banco == item %}selected{% endif %}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-3 col-xl-2">
+        <label for="cartao" class="form-label small text-secondary mb-1">Cartão</label>
+        <select class="form-select" id="cartao" name="cartao">
+          <option value="">Todos os cartões</option>
+          {% for item in cards %}
+            <option value="{{ item }}" {% if filters.cartao == item %}selected{% endif %}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-6 col-xl-4">
+        <label for="q" class="form-label small text-secondary mb-1">Busca</label>
+        <input type="search" class="form-control" id="q" name="q" value="{{ filters.q }}"
+               placeholder="Descrição, tipo, local, banco ou cartão">
+      </div>
+      <div class="col-6 col-md-3 col-xl-3">
+        <label for="ordenar" class="form-label small text-secondary mb-1">Ordenar por</label>
+        <select class="form-select" id="ordenar" name="ordenar">
+          {% for value, label in sort_options.items() %}
+            <option value="{{ value }}" {% if filters.ordenar == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-xl-5 d-flex gap-2">
+        <button type="submit" class="btn btn-dark flex-grow-1 flex-xl-grow-0">
+          <i class="bi bi-funnel me-1"></i>Filtrar
+        </button>
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-x-circle me-1"></i>Limpar
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if breakdown %}
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-body fw-semibold">
+      Total por tipo de despesa
+      <span class="small text-secondary fw-normal">· sobre o filtro atual</span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        {% for item in breakdown %}
+          <div class="col-12 col-md-6 col-xl-4">
+            <div class="d-flex justify-content-between small">
+              <span class="text-truncate me-2" title="{{ item.expense_type }}">{{ item.expense_type }}</span>
+              <span class="fw-semibold text-nowrap">R$ {{ item.total|brl }}</span>
+            </div>
+            <div class="progress mt-1" style="height: 6px;" role="progressbar"
+                 aria-label="{{ item.expense_type }}"
+                 aria-valuenow="{{ item.share|round(1) }}" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-bar" style="width: {{ item.share|round(1) }}%;"></div>
+            </div>
+            <div class="small text-secondary">{{ item.count }} lançamento(s) · {{ item.share|round(1) }}% do total</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-sm table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th scope="col" class="text-nowrap">Data</th>
+          <th scope="col">Descrição</th>
+          <th scope="col">Tipo de despesa</th>
+          <th scope="col">Local</th>
+          <th scope="col">Banco</th>
+          <th scope="col">Cartão</th>
+          <th scope="col">Origem</th>
+          <th scope="col" class="text-end text-nowrap">Valor (R$)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for movement in movements %}
+          <tr>
+            <td class="text-nowrap">{{ movement.movement_date|date_br }}</td>
+            <td class="text-break">{{ movement.description or '—' }}</td>
+            <td>
+              <span class="badge text-bg-secondary">{{ movement.expense_type }}</span>
+            </td>
+            <td>{{ movement.local or '—' }}</td>
+            <td>{{ movement.bank or '—' }}</td>
+            <td class="text-nowrap">{{ movement.card or '—' }}</td>
+            <td>
+              <span class="badge text-bg-light border">{{ movement.source_label }}</span>
+            </td>
+            <td class="text-end text-nowrap fw-semibold text-danger">{{ movement.amount|brl }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="8" class="text-center text-secondary py-5">
+              <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+              Nenhuma despesa encontrada com os filtros atuais.
+              <div class="mt-2">
+                <a href="{{ url_for('imports.import_files') }}">Importar um arquivo CSV</a>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      {% if movements %}
+        <tfoot class="table-light fw-semibold">
+          <tr>
+            <td colspan="7" class="text-end">Total das despesas filtradas ({{ count }} lançamento(s))</td>
+            <td class="text-end text-nowrap text-danger">R$ {{ total|brl }}</td>
+          </tr>
+        </tfoot>
+      {% endif %}
+    </table>
+  </div>
+
+  {% if pagination.pages > 1 %}
+    <div class="card-footer bg-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <span class="small text-secondary">
+        Página {{ pagination.page }} de {{ pagination.pages }} ·
+        {{ pagination.first }}–{{ pagination.last }} de {{ pagination.total }} registros
+      </span>
+      <nav aria-label="Paginação das despesas">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('main.index', page=pagination.prev_num, **filter_args) }}">
+              Anterior
+            </a>
+          </li>
+          {% for page_number in pagination.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
+            {% if page_number %}
+              <li class="page-item {% if page_number == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('main.index', page=page_number, **filter_args) }}">
+                  {{ page_number }}
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+          {% endfor %}
+          <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('main.index', page=pagination.next_num, **filter_args) }}">
+              Próxima
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
