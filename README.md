@@ -3,6 +3,15 @@
 Aplicação local em Flask para importar **despesas** de cartão de crédito e de conta
 bancária (CSV) e analisá-las com filtros, sempre exibindo o total do que está filtrado.
 
+> [!CAUTION]
+> **AVISO IMPORTANTE DE SEGURANÇA E ISENÇÃO DE RESPONSABILIDADE (DISCLAIMER)**
+>
+> 1. **Código Gerado por Inteligência Artificial:** Grande parte da arquitetura e do código-fonte desta aplicação foi desenvolvida com o auxílio de ferramentas de Inteligência Artificial (LLMs). Embora funcional para uso pessoal, o código **não passou por auditoria formal de segurança (pentest)** e pode conter falhas lógicas, bugs ou vulnerabilidades ocultas.
+> 2. **Risco de Exposição na Web Pública:** Esta aplicação foi projetada para **uso local (localhost) ou em rede privada**. **NÃO hospede ou exponha esta aplicação diretamente na internet pública** sem antes implementar camadas adequadas de segurança (autenticação robusta, HTTPS/SSL, firewall, proteção contra CSRF/XSS/SQL Injection, rate limiting e criptografia de dados sensíveis em repouso).
+> 3. **Dados Financeiros:** O sistema manipula informações sensíveis de faturas e gastos de cartão de crédito. Ao utilizar este software, você assume integralmente a responsabilidade pela guarda, backup e privacidade dos seus próprios dados.
+> 4. **Sem Garantias:** Este projeto é distribuído "como está" (*as-is*), sob a licença MIT. O autor não se responsabiliza por quaisquer perdas financeiras, vazamentos de dados, danos diretos ou indiretos decorrentes do uso, modificação ou implantação inadequada deste código.
+
+
 ## Requisitos
 
 - Python gerenciado por `pyenv` + `pyenv-virtualenv` (ambiente `money-view`)
