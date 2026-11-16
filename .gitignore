@@ -1,3 +1,7 @@
+# Claude Files
+CLAUDE.md
+.claude
+
 # Byte-compiled / cache
 __pycache__/
 *.py[cod]
@@ -7,6 +11,7 @@ __pycache__/
 venv/
 .venv/
 env/
+.python-version
 
 # Banco de dados e configurações locais
 instance/
